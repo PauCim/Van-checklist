@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apex Van Inspection &amp; Incident Report</title>
+<style>
+  :root{
+    --navy:#0b1f3a;
+    --navy-light:#13315c;
+    --accent:#c9a227;
+    --bg:#f4f5f7;
+    --ok:#1a7a4c;
+    --fail:#b3261e;
+    --border:#d8dce3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);
+    color:#1b1f27;
+  }
+  header{
+    background:var(--navy);
+    color:#fff;
+    padding:20px 18px 16px;
+  }
+  header .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-size:11px;
+    color:var(--accent);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  header h1{
+    margin:0;
+    font-size:20px;
+    line-height:1.3;
+  }
+  header .sub{
+    font-size:13px;
+    color:#c3cbdb;
+    margin-top:4px;
+  }
+
+  .tabs{
+    display:flex;
+    max-width:640px;
+    margin:0 auto;
+    background:var(--navy-light);
+  }
+  .tab-btn{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:#c3cbdb;
+    font-size:14px;
+    font-weight:700;
+    padding:14px 8px;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+  }
+  .tab-btn.active{
+    color:#fff;
+    border-bottom-color:var(--accent);
+    background:rgba(255,255,255,0.05);
+  }
+  .tab-btn.incident-tab.active{
+    border-bottom-color:var(--fail);
+  }
+
+  form{
+    max-width:640px;
+    margin:0 auto;
+    padding:16px;
+    display:none;
+  }
+  form.active{ display:block; }
+
+  .card{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    font-size:14px;
+    margin:0 0 12px;
+    color:var(--navy-light);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    border-bottom:2px solid var(--accent);
+    padding-bottom:6px;
+  }
+  #incidentForm .card h2{
+    border-bottom-color:var(--fail);
+  }
+  label{
+    display:block;
+    font-size:14px;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  input[type=text], input[type=date], input[type=time], textarea, select{
+    width:100%;
+    padding:10px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    font-size:15px;
+    margin-bottom:12px;
+    font-family:inherit;
+  }
+  textarea{resize:vertical; min-height:60px;}
+  .check-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid #eef0f3;
+  }
+  .check-row:last-child{border-bottom:none;}
+  .check-row span{font-size:14.5px;}
+  .status-btns{display:flex; gap:6px;}
+  .status-btns button{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:6px;
+    padding:6px 12px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    color:#555;
+  }
+  .status-btns button.ok.active{background:var(--ok); color:#fff; border-color:var(--ok);}
+  .status-btns button.fail.active{background:var(--fail); color:#fff; border-color:var(--fail);}
+
+  .yn-btns{display:flex; gap:6px; margin-bottom:12px;}
+  .yn-btns button{
+    flex:1;
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:6px;
+    padding:10px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    color:#555;
+  }
+  .yn-btns button.active.yes{background:var(--fail); color:#fff; border-color:var(--fail);}
+  .yn-btns button.active.no{background:var(--ok); color:#fff; border-color:var(--ok);}
+
+  .submit-wrap{padding:4px 0 32px;}
+  button.submit{
+    width:100%;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    padding:15px;
+    font-size:16px;
+    font-weight:700;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  button.submit:active{background:var(--navy-light);}
+  #incidentForm button.submit{background:var(--fail);}
+  #incidentForm button.submit:active{background:#8f1e18;}
+
+  .hint{
+    font-size:12px;
+    color:#6b7280;
+    margin-top:8px;
+    line-height:1.4;
+  }
+  input[type=file]{
+    width:100%;
+    padding:10px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    font-size:14px;
+    background:#fafafa;
+  }
+  .photo-preview{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+  }
+  .photo-thumb{
+    position:relative;
+    width:72px;
+    height:72px;
+    border-radius:6px;
+    overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .photo-thumb img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .photo-thumb .remove{
+    position:absolute;
+    top:2px;
+    right:2px;
+    background:rgba(0,0,0,0.65);
+    color:#fff;
+    border:none;
+    border-radius:50%;
+    width:20px;
+    height:20px;
+    font-size:12px;
+    line-height:20px;
+    text-align:center;
+    padding:0;
+    cursor:pointer;
+  }
+  .fail-count{
+    display:none;
+    background:#fdeceb;
+    border:1px solid var(--fail);
+    color:var(--fail);
+    font-size:13px;
+    font-weight:600;
+    padding:8px 10px;
+    border-radius:6px;
+    margin-bottom:12px;
+  }
+  .incident-banner{
+    background:#fdeceb;
+    border:1px solid var(--fail);
+    color:var(--fail);
+    font-size:13px;
+    font-weight:600;
+    padding:10px 12px;
+    border-radius:6px;
+    margin:16px auto 0;
+    max-width:608px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow" id="headerEyebrow">Apex &middot; SOP-LV-005</div>
+  <h1 id="headerTitle">Daily Van Inspection</h1>
+  <div class="sub" id="headerSub">Complete before first use each shift. Any FAIL item must be reported before driving.</div>
+</header>
+
+<div class="tabs">
+  <button type="button" class="tab-btn active" id="tabDaily">Daily Inspection</button>
+  <button type="button" class="tab-btn incident-tab" id="tabIncident">Incident Report</button>
+</div>
+
+<div class="incident-banner" id="incidentBanner" style="display:none;">
+  Use this only if damage, an accident, or a safety incident happens during the day. For anything involving injury, call for help first, then report here.
+</div>
+
+<!-- ===================== DAILY INSPECTION FORM ===================== -->
+<form id="inspectionForm" class="active">
+
+  <div class="card">
+    <h2>Details</h2>
+    <label for="tech">Technician Name</label>
+    <input type="text" id="tech" required>
+
+    <label for="van">Van # / Plate</label>
+    <input type="text" id="van" required>
+
+    <label for="date">Date</label>
+    <input type="date" id="date" required>
+
+    <label for="odo">Odometer</label>
+    <input type="text" id="odo" inputmode="numeric">
+  </div>
+
+  <div class="card">
+    <h2>Exterior &amp; Tires</h2>
+    <div class="checklist" data-section="Exterior & Tires">
+      <div class="check-row" data-item="Tires (tread, pressure, damage)"><span>Tires (tread, pressure, damage)</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Lights (head, tail, signal, brake)"><span>Lights (head, tail, signal, brake)</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Mirrors & windshield"><span>Mirrors &amp; windshield</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Body damage / leaks"><span>Body damage / leaks</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Interior &amp; Safety</h2>
+    <div class="checklist" data-section="Interior & Safety">
+      <div class="check-row" data-item="Seatbelts"><span>Seatbelts</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Horn & wipers"><span>Horn &amp; wipers</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="First aid kit stocked"><span>First aid kit stocked</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Fire extinguisher present/charged"><span>Fire extinguisher present/charged</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Warning triangles / flares"><span>Warning triangles / flares</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Fluids &amp; Mechanical</h2>
+    <div class="checklist" data-section="Fluids & Mechanical">
+      <div class="check-row" data-item="Engine oil / coolant level"><span>Engine oil / coolant level</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Brakes (feel, no noise)"><span>Brakes (feel, no noise)</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Battery / charging warning lights"><span>Battery / charging warning lights</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Cargo &amp; Equipment</h2>
+    <div class="checklist" data-section="Cargo & Equipment">
+      <div class="check-row" data-item="Ladder secured"><span>Ladder secured</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="Tools / materials secured"><span>Tools / materials secured</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+      <div class="check-row" data-item="PPE stocked (per SOP-LV-004)"><span>PPE stocked (per SOP-LV-004)</span><div class="status-btns"><button type="button" class="ok">OK</button><button type="button" class="fail">FAIL</button></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Notes</h2>
+    <div class="fail-count" id="failCount"></div>
+    <label for="notes">Describe any FAIL items or other issues</label>
+    <textarea id="notes" placeholder="e.g. Passenger mirror cracked, replace before next job"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Photos <span style="text-transform:none; font-weight:400; color:#6b7280;">(optional)</span></h2>
+    <label for="photos">Attach photos of any damage or issues</label>
+    <input type="file" id="photos" accept="image/*" multiple>
+    <div class="hint" style="margin-top:6px;">Tap to take a new photo, or choose existing ones from your gallery. You can select more than one.</div>
+    <div id="photoPreview" class="photo-preview"></div>
+  </div>
+
+  <div class="submit-wrap">
+    <button type="submit" class="submit">Send Inspection Email</button>
+    <div class="hint">Opens your email app with the completed inspection pre-filled. Confirm the recipient and tap send.</div>
+  </div>
+
+</form>
+
+<!-- ===================== INCIDENT REPORT FORM ===================== -->
+<form id="incidentForm">
+
+  <div class="card">
+    <h2>Details</h2>
+    <label for="iTech">Technician Name</label>
+    <input type="text" id="iTech" required>
+
+    <label for="iVan">Van # / Plate (if involved)</label>
+    <input type="text" id="iVan">
+
+    <label for="iDate">Date</label>
+    <input type="date" id="iDate" required>
+
+    <label for="iTime">Approx. Time</label>
+    <input type="time" id="iTime">
+
+    <label for="iLocation">Location / Job Site</label>
+    <input type="text" id="iLocation" required placeholder="e.g. 123 Main St, or client site name">
+  </div>
+
+  <div class="card">
+    <h2>What Happened</h2>
+    <label for="iType">Type of Incident</label>
+    <select id="iType" required>
+      <option value="">Select one...</option>
+      <option value="Vehicle accident / collision">Vehicle accident / collision</option>
+      <option value="Property damage">Property damage</option>
+      <option value="Injury">Injury</option>
+      <option value="Near miss">Near miss</option>
+      <option value="Utility strike">Utility strike</option>
+      <option value="Equipment damage">Equipment damage</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <label for="iDescription">Description</label>
+    <textarea id="iDescription" required placeholder="What happened, in your own words. Include what led up to it." style="min-height:100px;"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Safety</h2>
+    <label>Was anyone injured?</label>
+    <div class="yn-btns" data-group="injured">
+      <button type="button" class="yes">YES</button>
+      <button type="button" class="no">NO</button>
+    </div>
+    <label for="iInjuryDetails">If yes, describe injuries and who was involved</label>
+    <textarea id="iInjuryDetails" placeholder="Names, nature of injury, first aid given, etc."></textarea>
+
+    <label>Were emergency services called?</label>
+    <div class="yn-btns" data-group="emergency">
+      <button type="button" class="yes">YES</button>
+      <button type="button" class="no">NO</button>
+    </div>
+
+    <label>Has a supervisor been notified?</label>
+    <div class="yn-btns" data-group="supervisor">
+      <button type="button" class="yes">YES</button>
+      <button type="button" class="no">NO</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Witnesses &amp; Actions</h2>
+    <label for="iWitnesses">Witnesses (name &amp; phone, if any)</label>
+    <textarea id="iWitnesses" placeholder="None, or list names/contact info"></textarea>
+
+    <label for="iActions">Immediate actions taken</label>
+    <textarea id="iActions" placeholder="e.g. Site secured, photos taken, area cordoned off"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Photos <span style="text-transform:none; font-weight:400; color:#6b7280;">(strongly recommended)</span></h2>
+    <label for="iPhotos">Attach photos of the scene, damage, or injury (if appropriate)</label>
+    <input type="file" id="iPhotos" accept="image/*" multiple>
+    <div class="hint" style="margin-top:6px;">Tap to take a new photo, or choose existing ones from your gallery. You can select more than one.</div>
+    <div id="iPhotoPreview" class="photo-preview"></div>
+  </div>
+
+  <div class="submit-wrap">
+    <button type="submit" class="submit">Send Incident Report</button>
+    <div class="hint">Opens your email app with the report pre-filled. Confirm the recipient and tap send immediately.</div>
+  </div>
+
+</form>
+
+<script>
+/* ---------- Tab switching ---------- */
+const tabDaily = document.getElementById('tabDaily');
+const tabIncident = document.getElementById('tabIncident');
+const inspectionForm = document.getElementById('inspectionForm');
+const incidentForm = document.getElementById('incidentForm');
+const incidentBanner = document.getElementById('incidentBanner');
+const headerEyebrow = document.getElementById('headerEyebrow');
+const headerTitle = document.getElementById('headerTitle');
+const headerSub = document.getElementById('headerSub');
+
+tabDaily.addEventListener('click', () => {
+  tabDaily.classList.add('active');
+  tabIncident.classList.remove('active');
+  inspectionForm.classList.add('active');
+  incidentForm.classList.remove('active');
+  incidentBanner.style.display = 'none';
+  headerEyebrow.textContent = 'Apex \u00b7 SOP-LV-005';
+  headerTitle.textContent = 'Daily Van Inspection';
+  headerSub.textContent = 'Complete before first use each shift. Any FAIL item must be reported before driving.';
+});
+
+tabIncident.addEventListener('click', () => {
+  tabIncident.classList.add('active');
+  tabDaily.classList.remove('active');
+  incidentForm.classList.add('active');
+  inspectionForm.classList.remove('active');
+  incidentBanner.style.display = 'block';
+  headerEyebrow.textContent = 'Apex \u00b7 Incident Report';
+  headerTitle.textContent = 'Incident Report';
+  headerSub.textContent = 'Report damage, accidents, or safety incidents as soon as possible.';
+});
+
+/* ---------- Shared photo-input helper ---------- */
+function setupPhotoInput(inputEl, previewEl, getPhotos, setPhotos){
+  inputEl.addEventListener('change', function(){
+    const newFiles = Array.from(inputEl.files || []);
+    setPhotos(getPhotos().concat(newFiles));
+    inputEl.value = '';
+    render();
+  });
+  function render(){
+    const photos = getPhotos();
+    previewEl.innerHTML = '';
+    photos.forEach((file, idx) => {
+      const url = URL.createObjectURL(file);
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      thumb.innerHTML = '<img src="' + url + '"><button type="button" class="remove" data-idx="' + idx + '">&times;</button>';
+      previewEl.appendChild(thumb);
+    });
+    previewEl.querySelectorAll('.remove').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        const i = parseInt(this.dataset.idx, 10);
+        const photos2 = getPhotos();
+        photos2.splice(i, 1);
+        setPhotos(photos2);
+        render();
+      });
+    });
+  }
+}
+
+/* ---------- Shared send helper (share sheet, fallback to mailto) ---------- */
+function sendReport(subject, body, photos, recipient){
+  const mailto = 'mailto:' + recipient
+    + '?subject=' + encodeURIComponent(subject)
+    + '&body=' + encodeURIComponent(body);
+
+  if (photos.length && navigator.canShare && navigator.canShare({ files: photos })) {
+    navigator.share({
+      title: subject,
+      text: body + '\n\nSend to: ' + recipient,
+      files: photos
+    }).catch(() => {
+      window.location.href = mailto;
+    });
+  } else {
+    if (photos.length) {
+      alert('Your device can\u2019t attach photos automatically here. Email will open with the report \u2014 please attach the ' + photos.length + ' photo(s) manually from your camera roll before sending.');
+    }
+    window.location.href = mailto;
+  }
+}
+
+const RECIPIENT = 'Pcimini@apex-tb.com';
+
+/* ===================== DAILY INSPECTION LOGIC ===================== */
+const failCountEl = document.getElementById('failCount');
+const photoInput = document.getElementById('photos');
+const photoPreview = document.getElementById('photoPreview');
+let selectedPhotos = [];
+setupPhotoInput(photoInput, photoPreview, () => selectedPhotos, (p) => selectedPhotos = p);
+
+document.querySelectorAll('#inspectionForm .status-btns').forEach(group=>{
+  const [okBtn, failBtn] = group.querySelectorAll('button');
+  okBtn.addEventListener('click', ()=>{
+    okBtn.classList.add('active','ok');
+    failBtn.classList.remove('active');
+  });
+  failBtn.addEventListener('click', ()=>{
+    failBtn.classList.add('active','fail');
+    okBtn.classList.remove('active');
+  });
+});
+
+inspectionForm.addEventListener('submit', function(e){
+  e.preventDefault();
+
+  const tech = document.getElementById('tech').value.trim();
+  const van = document.getElementById('van').value.trim();
+  const date = document.getElementById('date').value;
+  const odo = document.getElementById('odo').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+
+  let unchecked = [];
+  let fails = [];
+  let lines = [];
+
+  document.querySelectorAll('#inspectionForm .checklist').forEach(section=>{
+    lines.push('');
+    lines.push(section.dataset.section.toUpperCase());
+    section.querySelectorAll('.check-row').forEach(row=>{
+      const item = row.dataset.item;
+      const okActive = row.querySelector('.ok').classList.contains('active');
+      const failActive = row.querySelector('.fail').classList.contains('active');
+      let status = 'NOT CHECKED';
+      if(okActive) status = 'OK';
+      if(failActive){ status = 'FAIL'; fails.push(item); }
+      if(!okActive && !failActive) unchecked.push(item);
+      lines.push('  [' + status + ']  ' + item);
+    });
+  });
+
+  if(!tech || !van || !date){
+    alert('Please fill in technician name, van number, and date.');
+    return;
+  }
+
+  if(unchecked.length){
+    const proceed = confirm(unchecked.length + ' item(s) not marked OK or FAIL. Send anyway?');
+    if(!proceed) return;
+  }
+
+  if(fails.length){
+    failCountEl.style.display = 'block';
+    failCountEl.textContent = fails.length + ' item(s) marked FAIL — describe in notes below before sending.';
+  }
+
+  const subject = 'Van Inspection - ' + van + ' - ' + date + (fails.length ? ' [FAIL ITEMS]' : '');
+
+  let body = 'DAILY VAN INSPECTION\n';
+  body += 'Technician: ' + tech + '\n';
+  body += 'Van: ' + van + '\n';
+  body += 'Date: ' + date + '\n';
+  body += 'Odometer: ' + (odo || 'n/a') + '\n';
+  body += lines.join('\n');
+  body += '\n\nNOTES:\n' + (notes || 'None') + '\n';
+  if(fails.length){
+    body += '\nFAIL ITEMS FLAGGED: ' + fails.join(', ') + '\n';
+  }
+
+  sendReport(subject, body, selectedPhotos, RECIPIENT);
+});
+
+/* ===================== INCIDENT REPORT LOGIC ===================== */
+const iPhotoInput = document.getElementById('iPhotos');
+const iPhotoPreview = document.getElementById('iPhotoPreview');
+let selectedIncidentPhotos = [];
+setupPhotoInput(iPhotoInput, iPhotoPreview, () => selectedIncidentPhotos, (p) => selectedIncidentPhotos = p);
+
+const ynState = { injured: null, emergency: null, supervisor: null };
+
+document.querySelectorAll('#incidentForm .yn-btns').forEach(group=>{
+  const key = group.dataset.group;
+  const [yesBtn, noBtn] = group.querySelectorAll('button');
+  yesBtn.addEventListener('click', ()=>{
+    yesBtn.classList.add('active');
+    noBtn.classList.remove('active');
+    ynState[key] = 'Yes';
+  });
+  noBtn.addEventListener('click', ()=>{
+    noBtn.classList.add('active');
+    yesBtn.classList.remove('active');
+    ynState[key] = 'No';
+  });
+});
+
+incidentForm.addEventListener('submit', function(e){
+  e.preventDefault();
+
+  const tech = document.getElementById('iTech').value.trim();
+  const van = document.getElementById('iVan').value.trim();
+  const date = document.getElementById('iDate').value;
+  const time = document.getElementById('iTime').value;
+  const location = document.getElementById('iLocation').value.trim();
+  const type = document.getElementById('iType').value;
+  const description = document.getElementById('iDescription').value.trim();
+  const injuryDetails = document.getElementById('iInjuryDetails').value.trim();
+  const witnesses = document.getElementById('iWitnesses').value.trim();
+  const actions = document.getElementById('iActions').value.trim();
+
+  if(!tech || !date || !location || !type || !description){
+    alert('Please fill in technician name, date, location, incident type, and description.');
+    return;
+  }
+
+  if(ynState.injured === 'Yes' && !injuryDetails){
+    const proceed = confirm('You indicated someone was injured but haven\u2019t described it. Send anyway?');
+    if(!proceed) return;
+  }
+
+  const subject = 'INCIDENT REPORT - ' + location + ' - ' + date + (ynState.injured === 'Yes' ? ' [INJURY]' : '');
+
+  let body = 'INCIDENT REPORT\n';
+  body += 'Technician: ' + tech + '\n';
+  body += 'Van/Vehicle: ' + (van || 'n/a') + '\n';
+  body += 'Date: ' + date + '\n';
+  body += 'Time: ' + (time || 'n/a') + '\n';
+  body += 'Location: ' + location + '\n';
+  body += 'Type: ' + type + '\n';
+  body += '\nDESCRIPTION:\n' + description + '\n';
+  body += '\nSAFETY:\n';
+  body += '  Injured: ' + (ynState.injured || 'Not specified') + '\n';
+  if(ynState.injured === 'Yes'){
+    body += '  Injury details: ' + (injuryDetails || 'Not provided') + '\n';
+  }
+  body += '  Emergency services called: ' + (ynState.emergency || 'Not specified') + '\n';
+  body += '  Supervisor notified: ' + (ynState.supervisor || 'Not specified') + '\n';
+  body += '\nWitnesses:\n' + (witnesses || 'None listed') + '\n';
+  body += '\nImmediate actions taken:\n' + (actions || 'None listed') + '\n';
+
+  sendReport(subject, body, selectedIncidentPhotos, RECIPIENT);
+});
+</script>
+
+</body>
+</html>
